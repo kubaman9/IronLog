@@ -4,6 +4,7 @@ import './Homer.css';
 import './ModifyLifts.css';
 import { useContext } from 'react';
 import { AuthContext } from '../context/context';
+import { API_URL } from '../config';
 
 const liftTypes = [
     'Chest',
@@ -90,7 +91,7 @@ export default function ModifyLifts() {
 
         const token = context.token;
 
-        fetch('http://localhost:3000/graphql', {
+        fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

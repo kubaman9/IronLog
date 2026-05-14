@@ -3,6 +3,7 @@ import LiftRow from './LiftRow'
 import { useNavigate } from 'react-router-dom'
 import { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../context/context'
+import { API_URL } from '../config'
 
 export default function MyLifts() {
     const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function MyLifts() {
 
         const token = context.token;
 
-        fetch('http://localhost:3000/graphql', {
+        fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

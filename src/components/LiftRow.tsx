@@ -1,6 +1,7 @@
 import { useState, type MouseEvent, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../context/context'
+import { API_URL } from '../config'
 import MaxWeightModal from './MaxWeightModal'
 import WeightChart from './WeightChart'
 
@@ -63,7 +64,7 @@ export default function LiftRow({ _id, name, weight, reps, sets, type, pastWeigh
             }
         `
 
-        fetch('http://localhost:3000/graphql', {
+        fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -96,7 +97,7 @@ export default function LiftRow({ _id, name, weight, reps, sets, type, pastWeigh
                     }
                 }
             `
-            fetch('http://localhost:3000/graphql', {
+            fetch(API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

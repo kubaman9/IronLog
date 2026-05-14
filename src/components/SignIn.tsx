@@ -2,6 +2,7 @@ import { useState, createContext, useContext } from 'react'
 import { useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react'
 import AuthContext from '../context/context'
+import { API_URL } from '../config'
 
 import './SignIn.css'
 
@@ -67,7 +68,7 @@ export default function SignIn() {
                 }
             `};
 
-        fetch('http://localhost:3000/graphql', {
+        fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
