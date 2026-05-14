@@ -79,7 +79,7 @@ export default function MyLifts() {
             <div className='Nav'>
                 <h2 onClick={() => navigate('/Home')}>Home</h2>
                 <h1>My Lifts</h1>
-                <h2 onClick={() => navigate('/liftModify')}>Add</h2>
+                <span />
             </div>
 
             <div>
@@ -90,13 +90,13 @@ export default function MyLifts() {
                                 <h3>{type}</h3>
                             </div>
                             {groupedLifts[type].map(lift => (
-                                <LiftRow 
+                                <LiftRow
                                     key={lift._id}
                                     _id={lift._id}
-                                    name={lift.name} 
+                                    name={lift.name}
                                     weight={`${lift.weight} lbs`}
-                                    reps={lift.reps} 
-                                    sets={lift.sets} 
+                                    reps={lift.reps}
+                                    sets={lift.sets}
                                     type={lift.type}
                                     pastWeights={lift.pastWeights || []}
                                     onMaxUpdate={fetchLifts}
@@ -110,6 +110,8 @@ export default function MyLifts() {
                     </div>
                 )}
             </div>
+
+            <button className='fab' onClick={() => navigate('/liftModify')}>+</button>
         </>
     )
 }

@@ -105,6 +105,7 @@ export default function Home() {
                 </div>
             </div>
 
+            <button className='fab' onClick={() => navigate('/liftModify')}>+</button>
         </>
     )
 
