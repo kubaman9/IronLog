@@ -9,17 +9,42 @@ import { AuthContext } from './context/context'
 import { useState } from 'react'
 
 function App() {
-  const [token, setToken] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+
+  const getValidToken = (key: 'token' | 'userId') => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      return null;
+    }
+  } catch {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    return null;
+  }
+
+  return localStorage.getItem(key);
+};
+
+  const [token, setToken] = useState<string | null>(() => getValidToken('token'));
+  const [userId, setUserId] = useState<string | null>(() => getValidToken('userId'));
 
   const login = (newToken: string, newUserId: string) => {
     setToken(newToken);
     setUserId(newUserId);
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('userId', newUserId);
   };
 
   const logout = () => {
     setToken(null);
     setUserId(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
   };
 
   return (
