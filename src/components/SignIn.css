@@ -1,6 +1,7 @@
 #box {
   max-width: 380px;
   margin: 80px auto 0;
+  animation: page-in 0.3s ease both;
   padding: 40px 36px;
   border: 1px solid var(--border);
   border-radius: 16px;

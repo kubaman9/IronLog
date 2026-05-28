@@ -1,4 +1,4 @@
-import { useState, type MouseEvent, useContext } from 'react'
+import { useState, useRef, type MouseEvent, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../context/context'
 import { API_URL } from '../config'
@@ -20,23 +20,13 @@ export default function LiftRow({ _id, name, weight, reps, sets, type, pastWeigh
     const [showChart, setShowChart] = useState(false)
     const [showMaxModal, setShowMaxModal] = useState(false)
     const [isFlashing, setIsFlashing] = useState(false)
+    const shellRef = useRef<HTMLDivElement>(null)
     const navigate = useNavigate()
     const context = useContext(AuthContext)
 
     const handleEdit = (event: MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation()
-        navigate('/liftModify', {
-            state: {
-                lift: {
-                    _id,
-                    name,
-                    weight: parseInt(weight),
-                    reps,
-                    sets,
-                    type
-                }
-            }
-        })
+        navigate('/liftModify', { state: { lift: { _id, name, weight: parseInt(weight), reps, sets, type } } })
     }
 
     const handleMaxClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -47,80 +37,53 @@ export default function LiftRow({ _id, name, weight, reps, sets, type, pastWeigh
     const handleMaxConfirm = (newWeightNum: number) => {
         setShowMaxModal(false)
 
-        const updateQuery = `
-            mutation {
-                editLift(liftId: "${_id}", liftInput: {
-                    name: "${name}",
-                    weight: ${newWeightNum},
-                    sets: ${sets},
-                    reps: ${reps},
-                    type: "${type}"
-                }) {
-                    _id
-                    name
-                    weight
-                    pastWeights
-                }
-            }
-        `
-
         fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${context.token}`
-            },
-            body: JSON.stringify({ query: updateQuery })
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${context.token}` },
+            body: JSON.stringify({
+                query: `mutation {
+                    editLift(liftId: "${_id}", liftInput: {
+                        name: "${name}", weight: ${newWeightNum},
+                        sets: ${sets}, reps: ${reps}, type: "${type}"
+                    }) { _id name weight pastWeights }
+                }`
+            })
         })
             .then(res => res.json())
             .then(data => {
-                if (data.errors) {
-                    console.error(data.errors)
-                    return
-                }
-                setIsFlashing(true)
-                setTimeout(() => setIsFlashing(false), 1000)
+                if (data.errors) { console.error(data.errors); return }
+
+                // Scroll into view first, then flash
+                shellRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+                // Small delay so scroll settles before flash fires
+                setTimeout(() => {
+                    setIsFlashing(true)
+                    setTimeout(() => setIsFlashing(false), 1400)
+                }, 300)
+
+                // Refresh list without showing skeleton (silent refresh)
                 onMaxUpdate()
             })
-            .catch(err => {
-                console.error(err)
-            })
+            .catch(console.error)
     }
 
     const handleDelete = (event: MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation()
         if (confirm(`Are you sure you want to delete ${name}?`)) {
-            const deleteQuery = `
-                mutation {
-                    deleteLift(liftId: "${_id}") {
-                        _id
-                    }
-                }
-            `
             fetch(API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${context.token}`
-                },
-                body: JSON.stringify({ query: deleteQuery })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${context.token}` },
+                body: JSON.stringify({ query: `mutation { deleteLift(liftId: "${_id}") { _id } }` })
             })
                 .then(res => res.json())
-                .then(data => {
-                    if (data.errors) {
-                        console.error(data.errors)
-                        return
-                    }
-                    onMaxUpdate()
-                })
-                .catch(err => {
-                    console.error(err)
-                })
+                .then(data => { if (!data.errors) onMaxUpdate() })
+                .catch(console.error)
         }
     }
 
     return (
-        <div className={`lift-row-shell ${isFlashing ? 'flash-green' : ''}`}>
+        <div ref={shellRef} className={`lift-row-shell ${isFlashing ? 'flash-green' : ''}`}>
             <div className='lift-row' onClick={() => setShowChart(prev => !prev)} role='button' tabIndex={0}>
                 <span className='lift-name'>{name}</span>
                 <div className='lift-stat'>
@@ -139,20 +102,21 @@ export default function LiftRow({ _id, name, weight, reps, sets, type, pastWeigh
                     <span className='lift-badge'>{type}</span>
                 </div>
             </div>
-            {showChart && <WeightChart liftName={name} pastWeights={pastWeights} />}
+
             {showChart && (
-                <div className='lift-actions-menu'>
-                    <button type='button' className='lift-action-button lift-action-max' onClick={handleMaxClick}>
-                        Max
-                    </button>
-                    <button type='button' className='lift-action-button lift-action-edit' onClick={handleEdit}>
-                        Edit
-                    </button>
-                    <button type='button' className='lift-action-button lift-action-delete' onClick={handleDelete}>
-                        Delete
-                    </button>
+                <div className='chart-slide-in'>
+                    <WeightChart liftName={name} pastWeights={pastWeights} />
                 </div>
             )}
+
+            {showChart && (
+                <div className='lift-actions-menu actions-slide-in'>
+                    <button type='button' className='lift-action-button lift-action-max' onClick={handleMaxClick}>Max</button>
+                    <button type='button' className='lift-action-button lift-action-edit' onClick={handleEdit}>Edit</button>
+                    <button type='button' className='lift-action-button lift-action-delete' onClick={handleDelete}>Delete</button>
+                </div>
+            )}
+
             {showMaxModal && (
                 <MaxWeightModal
                     liftName={name}

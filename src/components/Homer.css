@@ -15,6 +15,9 @@
     font-size: 18px;
     letter-spacing: -0.3px;
     color: var(--text-h);
+    text-align: center;
+    font-family: var(--heading);
+    font-weight: 700;
 }
 
 .Nav h2 {
@@ -285,6 +288,53 @@
     margin-top: 0;
     transition: opacity 0.15s, transform 0.1s;
     z-index: 20;
+}
+
+/* ── Animations ── */
+@keyframes row-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes chart-in {
+    from { opacity: 0; max-height: 0; }
+    to   { opacity: 1; max-height: 400px; }
+}
+
+@keyframes actions-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Apply page-in to main content containers */
+#RecentLifts,
+.list-controls,
+.section-card,
+.rec-intro,
+.rec-card {
+    animation: page-in 0.3s ease both;
+}
+
+/* Stagger lift rows */
+.lift-row-shell {
+    animation: row-in 0.25s ease both;
+}
+
+.lift-row-shell:nth-child(1)  { animation-delay: 0.05s; }
+.lift-row-shell:nth-child(2)  { animation-delay: 0.10s; }
+.lift-row-shell:nth-child(3)  { animation-delay: 0.15s; }
+.lift-row-shell:nth-child(4)  { animation-delay: 0.18s; }
+.lift-row-shell:nth-child(5)  { animation-delay: 0.20s; }
+.lift-row-shell:nth-child(n+6){ animation-delay: 0.22s; }
+
+/* Chart & actions slide */
+.chart-slide-in {
+    animation: chart-in 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+    overflow: hidden;
+}
+
+.actions-slide-in {
+    animation: actions-in 0.2s ease both;
 }
 
 /* Search & sort controls */

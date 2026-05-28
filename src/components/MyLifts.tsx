@@ -20,8 +20,8 @@ export default function MyLifts() {
         fetchLifts();
     }, []);
 
-    const fetchLifts = () => {
-        setLoading(true);
+    const fetchLifts = (silent = false) => {
+        if (!silent) setLoading(true);
         const token = context.token;
         fetch(API_URL, {
             method: 'POST',
@@ -99,7 +99,7 @@ export default function MyLifts() {
                                     sets={lift.sets}
                                     type={lift.type}
                                     pastWeights={lift.pastWeights || []}
-                                    onMaxUpdate={fetchLifts}
+                                    onMaxUpdate={() => fetchLifts(true)}
                                 />
                             ))}
                         </div>
