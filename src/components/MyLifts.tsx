@@ -1,78 +1,56 @@
 import './Homer.css'
 import LiftRow from './LiftRow'
+import SkeletonLiftRow from './SkeletonLiftRow'
 import { useNavigate } from 'react-router-dom'
 import { useContext, useEffect, useState } from 'react'
 import { AuthContext } from '../context/context'
 import { API_URL } from '../config'
 
+const SORT_OPTIONS = ['A–Z', 'Z–A', 'Weight ↑', 'Weight ↓', 'Most Sessions']
+
 export default function MyLifts() {
     const navigate = useNavigate();
     const context = useContext(AuthContext);
     const [lifts, setLifts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [sort, setSort] = useState('A–Z');
 
     useEffect(() => {
         fetchLifts();
     }, []);
 
     const fetchLifts = () => {
-        let requestBody = {
-            query: `
-                query {
-                    userLifts {
-                        _id
-                        name
-                        weight
-                        sets
-                        reps
-                        type
-                        pastWeights
-                    }
-                }
-            `};
-
+        setLoading(true);
         const token = context.token;
-
         fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                query: requestBody.query
-            })
-        }).then(res => {
-            if (res.status !== 200 && res.status !== 201) {
-                throw new Error('Failed to authenticate.');
-            }
-            return res.json();
-        }).then(data => {
-            console.log(data);
-            if (data.data?.userLifts) {
-                setLifts(data.data.userLifts);
-            }
-        }).catch(err => {
-            console.error(err);
-        });
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ query: `query { userLifts { _id name weight sets reps type pastWeights } }` })
+        })
+            .then(res => res.json())
+            .then(data => { if (data.data?.userLifts) setLifts(data.data.userLifts); })
+            .catch(err => console.error(err))
+            .finally(() => setLoading(false));
     }
 
-    const getLiftsGroupedByType = () => {
-        const grouped: { [key: string]: any[] } = {};
-        lifts.forEach(lift => {
-            if (!grouped[lift.type]) {
-                grouped[lift.type] = [];
-            }
-            grouped[lift.type].push(lift);
+    const filtered = lifts
+        .filter(l => l.name.toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+            if (sort === 'A–Z') return a.name.localeCompare(b.name);
+            if (sort === 'Z–A') return b.name.localeCompare(a.name);
+            if (sort === 'Weight ↑') return a.weight - b.weight;
+            if (sort === 'Weight ↓') return b.weight - a.weight;
+            if (sort === 'Most Sessions') return (b.pastWeights?.length || 0) - (a.pastWeights?.length || 0);
+            return 0;
         });
-        // Sort each group by pastWeights length
-        Object.keys(grouped).forEach(type => {
-            grouped[type].sort((a, b) => (b.pastWeights?.length || 0) - (a.pastWeights?.length || 0));
-        });
-        return grouped;
-    }
 
-    const groupedLifts = getLiftsGroupedByType();
-    const sortedTypes = Object.keys(groupedLifts).sort();
+    const grouped: { [key: string]: any[] } = {};
+    filtered.forEach(lift => {
+        if (!grouped[lift.type]) grouped[lift.type] = [];
+        grouped[lift.type].push(lift);
+    });
+    const sortedTypes = Object.keys(grouped).sort();
 
     return (
         <>
@@ -82,14 +60,36 @@ export default function MyLifts() {
                 <span />
             </div>
 
+            <div className='list-controls'>
+                <input
+                    className='search-input'
+                    type='text'
+                    placeholder='Search lifts…'
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                />
+                <select
+                    className='sort-select'
+                    value={sort}
+                    onChange={e => setSort(e.target.value)}
+                >
+                    {SORT_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                </select>
+            </div>
+
             <div>
-                {lifts.length > 0 ? (
+                {loading ? (
+                    <div className='section-card'>
+                        <div className='section-card-header'><div className='skeleton skeleton-title' /></div>
+                        {[1, 2, 3].map(i => <SkeletonLiftRow key={i} />)}
+                    </div>
+                ) : filtered.length > 0 ? (
                     sortedTypes.map(type => (
                         <div key={type} className='section-card'>
                             <div className='section-card-header'>
                                 <h3>{type}</h3>
                             </div>
-                            {groupedLifts[type].map(lift => (
+                            {grouped[type].map(lift => (
                                 <LiftRow
                                     key={lift._id}
                                     _id={lift._id}
@@ -106,7 +106,9 @@ export default function MyLifts() {
                     ))
                 ) : (
                     <div className='section-card'>
-                        <p>No lifts found. Add one to get started!</p>
+                        <p style={{ padding: '24px', color: 'var(--text-secondary)' }}>
+                            {search ? 'No lifts match your search.' : 'No lifts found. Add one to get started!'}
+                        </p>
                     </div>
                 )}
             </div>
@@ -115,4 +117,3 @@ export default function MyLifts() {
         </>
     )
 }
-

@@ -16,7 +16,7 @@ export default function WeightChart({ liftName, pastWeights }: WeightChartProps)
     }
 
     const data = pastWeights.map((weight, index) => ({
-        index: index + 1,
+        session: `S${index + 1}`,
         weight: weight
     }))
 
@@ -46,10 +46,11 @@ export default function WeightChart({ liftName, pastWeights }: WeightChartProps)
             <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis 
-                        dataKey="index" 
-                        label={{ value: 'Attempts', position: 'insideBottomRight', offset: -5 }}
+                    <XAxis
+                        dataKey="session"
+                        label={{ value: 'Session', position: 'insideBottomRight', offset: -5 }}
                         stroke="var(--text-secondary)"
+                        tick={{ fontSize: 11 }}
                     />
                     <YAxis 
                         label={{ value: 'Weight (lbs)', angle: -90, position: 'insideLeft' }}
@@ -62,7 +63,8 @@ export default function WeightChart({ liftName, pastWeights }: WeightChartProps)
                             borderRadius: '8px',
                             color: 'var(--text)'
                         }}
-                        formatter={(value) => `${value} lbs`}
+                        formatter={(value) => [`${value} lbs`, 'Weight']}
+                        labelFormatter={(label) => `Session ${label?.replace('S', '')}`}
                     />
                     <Line 
                         type="monotone" 

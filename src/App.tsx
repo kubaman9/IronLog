@@ -3,6 +3,7 @@ import SignIn from './components/SignIn'
 import Home from './components/Home'
 import MyLifts from './components/MyLifts'
 import ModifyLifts from './components/ModifyLifts'
+import RecommendedLifts from './components/RecommendedLifts'
 import { Route, Routes } from 'react-router-dom'
 import { UserProvider } from './components/SignIn'
 import { AuthContext } from './context/context'
@@ -56,6 +57,7 @@ function App() {
           <Route path='/MyLifts' element={<MyLifts />} />
           <Route path='/Lift' element={<SignIn />} />
           <Route path='/liftModify' element={<ModifyLifts />} />
+          <Route path='/recommended' element={<RecommendedLifts />} />
         </Routes>
       </UserProvider>
     </AuthContext.Provider>

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@300;400;500;600&display=swap');
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -13,8 +15,8 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Barlow', system-ui, sans-serif;
+  --heading: 'Barlow Condensed', system-ui, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -55,7 +57,7 @@
 }
 
 #root {
-  width: 1126px;
+  width: 600px;
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
@@ -64,6 +66,41 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg-secondary) 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.skeleton-lift-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.skeleton-name  { height: 14px; width: 80%; }
+.skeleton-stat  { height: 14px; width: 60%; margin: 0 auto; }
+.skeleton-badge { height: 20px; width: 50px; border-radius: 20px; margin: 0 auto; }
+.skeleton-title { height: 12px; width: 80px; }
+
+@media (max-width: 480px) {
+  .skeleton-lift-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .skeleton-stat:nth-child(n+4) { display: none; }
 }
 
 body {
