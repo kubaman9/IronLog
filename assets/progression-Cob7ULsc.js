@@ -1,0 +1,1 @@
+var e=e=>{if(!e||e.length<2)return`new`;let t=e[e.length-1],n=e[e.length-2];return t>n?`up`:t<n?`down`:`flat`},t=(e,t)=>t===1?e:Math.round(e*(1+t/30)),n=(t,n,r)=>{let i=n?.length||0,a=e(n);if(i<2||a===`down`)return t;if(a===`flat`)return t+5;let o=Math.round(i<8?t*.05:i<20?t*.025:t*.0125);return t+Math.max(o,5)};export{n,e as r,t};
