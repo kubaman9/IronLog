@@ -42,6 +42,8 @@ export default function WorkoutSession() {
     const [showAddLift, setShowAddLift] = useState(false)
     const [showGenerateLifts, setShowGenerateLifts] = useState(false)
     const [selectedGenIds, setSelectedGenIds] = useState<Set<string>>(new Set())
+    const [sessionGroups, setSessionGroups] = useState<string[]>([])
+    const [addLiftFilter, setAddLiftFilter] = useState<string>('')
     const [qaName, setQaName] = useState('')
     const [qaWeight, setQaWeight] = useState('')
     const [qaType, setQaType] = useState('Chest')
@@ -70,6 +72,7 @@ export default function WorkoutSession() {
         setStartTime(saved.startTime)
         setTotalMinutes(saved.totalMinutes)
         setSessionMode(saved.mode || 'planned')
+        setSessionGroups(saved.muscleGroups || [])
         setElapsed(Date.now() - saved.startTime)
         setLoaded(true)
     }, [])
@@ -502,15 +505,27 @@ export default function WorkoutSession() {
                         <div className='qa-handle' />
                         <h3 className='qa-title'>Add Lift</h3>
 
+                        {/* Type filter chips */}
+                        {sessionGroups.length > 0 && (
+                            <div className='ws-addlift-filters'>
+                                <button className={`ws-addlift-chip ${addLiftFilter === '' ? 'active' : ''}`} onClick={() => setAddLiftFilter('')}>All</button>
+                                {sessionGroups.map(g => (
+                                    <button key={g} className={`ws-addlift-chip ${addLiftFilter === g ? 'active' : ''}`} onClick={() => setAddLiftFilter(f => f === g ? '' : g)}>{displayType(g)}</button>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Primary: From My Lifts */}
                         {savedLifts.length > 0 ? (
                             <div className='ws-addlift-section'>
                                 <div className='ws-qs-label'>My Lifts</div>
-                                {savedLifts.map(l => (
+                                {savedLifts
+                                    .filter(l => !addLiftFilter || l.type === addLiftFilter)
+                                    .map(l => (
                                     <div key={l._id} className='ws-lib-lift-row' onClick={() => addLiftFromLibrary(l._id)}>
                                         <div style={{ flex: 1 }}>
                                             <div className='ws-lib-lift-name'>{l.name}</div>
-                                            <div className='ws-lib-lift-meta'>{l.type} · {l.weight > 0 ? `${l.weight} lbs · ` : ''}{l.sets}×{l.reps}</div>
+                                            <div className='ws-lib-lift-meta'>{displayType(l.type)} · {l.weight > 0 ? `${l.weight} lbs · ` : ''}{l.sets}×{l.reps}</div>
                                         </div>
                                         <span className='ws-lib-add-icon'>+</span>
                                     </div>
@@ -562,7 +577,7 @@ export default function WorkoutSession() {
                                         <div className='ws-gen-check'>{selected ? '✓' : ''}</div>
                                         <div style={{ flex: 1 }}>
                                             <div className='ws-lib-lift-name'>{l.name}</div>
-                                            <div className='ws-lib-lift-meta'>{l.type} · {l.weight > 0 ? `${l.weight} lbs · ` : ''}{l.sets}×{l.reps}</div>
+                                            <div className='ws-lib-lift-meta'>{displayType(l.type)} · {l.weight > 0 ? `${l.weight} lbs · ` : ''}{l.sets}×{l.reps}</div>
                                         </div>
                                     </div>
                                 )
@@ -595,7 +610,7 @@ export default function WorkoutSession() {
                                         }}>
                                             <div style={{ flex: 1 }}>
                                                 <div className='ws-lib-lift-name'>{l.name}</div>
-                                                <div className='ws-lib-lift-meta'>{l.type}{l.weight > 0 ? ` · ${l.weight} lbs` : ''} · {l.sets}×{l.reps}</div>
+                                                <div className='ws-lib-lift-meta'>{displayType(l.type)}{l.weight > 0 ? ` · ${l.weight} lbs` : ''} · {l.sets}×{l.reps}</div>
                                             </div>
                                             <span className='ws-lib-add-icon'>+</span>
                                         </div>

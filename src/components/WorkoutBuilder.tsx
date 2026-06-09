@@ -53,7 +53,7 @@ export default function WorkoutBuilder() {
     }, [groups, duration, setsPerEx, userLifts])
 
     const toggleGroup = (g: string) =>
-        setGroups(p => p.includes(g) ? p.filter(x => x !== g) : p.length < 3 ? [...p, g] : p)
+        setGroups(p => p.includes(g) ? p.filter(x => x !== g) : (mode === 'on-the-go' || p.length < 3) ? [...p, g] : p)
 
     const removeEx = (id: string) => setPlan(p => p.filter(e => e.id !== id))
 
@@ -130,17 +130,20 @@ export default function WorkoutBuilder() {
                     </button>
                 </div>
 
-                {mode === 'planned' && (
                 <div className='wb-section'>
-                    <div className='wb-section-title'>Muscle Groups <span className='wb-hint'>up to 3</span></div>
+                    <div className='wb-section-title'>
+                        {mode === 'planned' ? 'Muscle Groups' : 'Focus Areas'}
+                        <span className='wb-hint'>{mode === 'planned' ? 'up to 3' : 'filters Add Lift'}</span>
+                    </div>
                     <div className='wb-chips'>
                         {MUSCLE_TYPES.map(g => (
                             <button key={g} className={`wb-chip ${groups.includes(g) ? 'active' : ''}`}
-                                onClick={() => toggleGroup(g)} disabled={!groups.includes(g) && groups.length >= 3}>{displayType(g)}</button>
+                                onClick={() => toggleGroup(g)}
+                                disabled={mode === 'planned' && !groups.includes(g) && groups.length >= 3}
+                            >{displayType(g)}</button>
                         ))}
                     </div>
                 </div>
-                )}
 
                 <div className='wb-section'>
                     <div className='wb-section-title'>Duration & Sets</div>
@@ -171,12 +174,8 @@ export default function WorkoutBuilder() {
                 </div>
 
                 {mode === 'on-the-go' && (
-                    <div className='wb-otg-cta'>
-                        <div className='wb-otg-icon'>🏃</div>
-                        <div className='wb-otg-text'>
-                            <strong>Start fresh</strong>
-                            <span>Add exercises mid-session from your lift library</span>
-                        </div>
+                    <div className='wb-otg-hint'>
+                        Select focus areas above to pre-filter your lift library mid-session, or leave all unchecked for no filter.
                     </div>
                 )}
 

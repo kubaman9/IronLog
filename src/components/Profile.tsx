@@ -202,7 +202,7 @@ export default function Profile() {
                 <div className='profile-filters'>
                     <input className='search-input' placeholder='Search lifts…' value={search} onChange={e => setSearch(e.target.value)} />
                     <select className='sort-select' value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-                        {ALL_TYPES.map(t => <option key={t}>{t}</option>)}
+                        {ALL_TYPES.map(t => <option key={t} value={t}>{displayType(t)}</option>)}
                     </select>
                     <select className='sort-select' value={sortBy} onChange={e => setSortBy(e.target.value as any)}>
                         <option value='weight'>Weight ↓</option>

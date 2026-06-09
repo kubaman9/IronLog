@@ -1197,6 +1197,33 @@
     opacity: 0.8;
 }
 
+/* ─── Add Lift filter chips ─── */
+.ws-addlift-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+}
+.ws-addlift-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--heading);
+}
+.ws-addlift-chip.active {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    color: var(--accent);
+}
+
 /* ─── Add Lift sheet sections ─── */
 .ws-addlift-section {
     padding: 10px 0 4px;
