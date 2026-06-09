@@ -560,27 +560,6 @@ export default function WorkoutSession() {
                             <p className='ws-addlift-empty'>No saved lifts yet — add one below.</p>
                         )}
 
-                        {/* Quick Add New Lift — saves to library + adds to session */}
-                        <div className='ws-addlift-section ws-addlift-qa'>
-                            <div className='ws-qs-label'>Quick Add to Library</div>
-                            <form className='qa-form' onSubmit={submitQuickAdd}>
-                                <input className='qa-input' placeholder='Lift name (e.g. Bench Press)' value={qaName} onChange={e => setQaName(e.target.value)} />
-                                <div className='qa-row'>
-                                    <div className='qa-stepper'>
-                                        <button type='button' onClick={() => setQaWeight(String(Math.max(0, (parseInt(qaWeight) || 0) - 5)))}>−</button>
-                                        <input className='qa-weight-val' type='number' inputMode='decimal' placeholder='0' value={qaWeight} onChange={e => setQaWeight(e.target.value)} />
-                                        <span className='qa-step-unit'>lbs</span>
-                                        <button type='button' onClick={() => setQaWeight(String((parseInt(qaWeight) || 0) + 5))}>+</button>
-                                    </div>
-                                    <select className='qa-input qa-type' value={qaType} onChange={e => setQaType(e.target.value)}>
-                                        {MUSCLE_TYPES.map(t => <option key={t}>{t}</option>)}
-                                    </select>
-                                </div>
-                                <button className='qa-submit' type='submit' disabled={!qaName.trim() || qaLoading}>
-                                    {qaLoading ? 'Adding…' : 'Add to Library & Session'}
-                                </button>
-                            </form>
-                        </div>
                     </div>
                 </div>
             )}
