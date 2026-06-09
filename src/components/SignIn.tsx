@@ -1,26 +1,24 @@
 import { useState, createContext, useContext } from 'react'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import AuthContext from '../context/context'
-import { API_URL } from '../config'
-
+import { loginRequest, signUpRequest } from '../utils/api'
 import './SignIn.css'
 
-type UserContextType = {
-    username: string
-    setUsername: (name: string) => void
-}
+type UserContextType = { username: string; setUsername: (name: string) => void }
 
-export const UserContext = createContext<UserContextType>({
-    username: '',
-    setUsername: () => {}
-})
+export const UserContext = createContext<UserContextType>({ username: '', setUsername: () => {} })
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-    const [username, setUsername] = useState('')
+    const [username, setUsername] = useState(() => localStorage.getItem('username') || '')
+
+    const setAndPersist = (name: string) => {
+        setUsername(name)
+        if (name) localStorage.setItem('username', name)
+    }
 
     return (
-        <UserContext.Provider value={{ username, setUsername }}>
+        <UserContext.Provider value={{ username, setUsername: setAndPersist }}>
             {children}
         </UserContext.Provider>
     )
@@ -29,71 +27,48 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 export const useUser = () => useContext(UserContext)
 
 export default function SignIn() {
-
-    const { username, setUsername} = useUser();
-    const authContext = useContext(AuthContext);
+    const { username, setUsername } = useUser()
+    const authContext = useContext(AuthContext)
     const [password, setPassword] = useState('')
-    const [isSignUp, setIsSignUp] = useState(false);
-    const navigate = useNavigate();
+    const [isSignUp, setIsSignUp] = useState(false)
+    const [error, setError] = useState('')
+    const [busy, setBusy] = useState(false)
+    const navigate = useNavigate()
 
-    const toggleSignUp = () => {
-        setIsSignUp(prev => !prev);
-    };
+    const submitHandler = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const user = username.trim()
+        if (!user || !password) { setError('Enter both username and password.'); return }
+        if (isSignUp && password.length < 6) { setError('Password must be at least 6 characters.'); return }
+        setError(''); setBusy(true)
 
-    const submitHandler = (event: React.FormEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-        if (username.trim() === '' || password.trim() === '') {
-            alert('Please enter both username and password.');
-            return;
+        try {
+            if (isSignUp) {
+                try {
+                    await signUpRequest(user, password)
+                } catch {
+                    setError('Username already taken or invalid.'); return
+                }
+                const { login } = await loginRequest(user, password)
+                authContext.login(login.token, login.userId)
+                navigate('/onboarding')
+            } else {
+                const { login } = await loginRequest(user, password)
+                authContext.login(login.token, login.userId)
+                navigate('/Home')
+            }
+        } catch (err: any) {
+            const msg = String(err?.message || '')
+            if (/password/i.test(msg)) setError('Incorrect password.')
+            else if (/exist/i.test(msg)) setError('No account with that username.')
+            else setError('Could not connect. Please try again.')
+        } finally {
+            setBusy(false)
         }
-
-        let requestBody = {
-            query: `
-                query {
-                    login(email: "${username}", password: "${password}") {
-                        userId
-                        token
-                        tokenExpiration
-                    }
-                }
-            `};
-
-        let requestBodySignUp = {
-            query: `
-                mutation {
-                    createUser(userInput: {email: "${username}", password: "${password}"}) {
-                        _id
-                        email
-                    }
-                }
-            `};
-
-        fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                query: isSignUp ? requestBodySignUp.query : requestBody.query
-            })
-        }).then(res => {
-            if (res.status !== 200 && res.status !== 201) {
-                throw new Error('Failed to authenticate.');
-            }
-            return res.json();
-        }).then(data => {
-            if (!isSignUp) {
-                authContext.login(data.data.login.token, data.data.login.userId);
-            }
-            console.log(data);
-            navigate('/Home');
-        }).catch(err => {
-            console.error(err);
-        });
     }
 
     return (
-        <div id='box'>
+        <form id='box' onSubmit={submitHandler}>
             <div className='sign-in-brand'>
                 <span className='sign-in-icon'>🏋️</span>
                 <h1>IronLog</h1>
@@ -102,28 +77,26 @@ export default function SignIn() {
 
             <div className='input-group'>
                 <label htmlFor='username'>Username</label>
-                <input
-                    id='username'
-                    type='text'
-                    placeholder='Enter your username'
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
+                <input id='username' name='username' type='text' placeholder='Enter your username'
+                    autoComplete='username' autoCapitalize='none' spellCheck={false}
+                    value={username} onChange={e => setUsername(e.target.value)} />
             </div>
 
             <div className='input-group'>
                 <label htmlFor='password'>Password</label>
-                <input
-                    id='password'
-                    type='password'
-                    placeholder='Enter your password'
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                <input id='password' name='password' type='password' placeholder='Enter your password'
+                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                    value={password} onChange={e => setPassword(e.target.value)} />
             </div>
 
-            <button onClick={submitHandler}>{isSignUp ? 'Sign Up' : 'Sign In'}</button>
-            <button onClick={toggleSignUp}>Switch to {isSignUp ? 'Sign In' : 'Sign Up'}</button>
-        </div>
+            {error && <p className='sign-in-error'>{error}</p>}
+
+            <button type='submit' disabled={busy}>
+                {busy ? '…' : isSignUp ? 'Create Account' : 'Sign In'}
+            </button>
+            <button type='button' className='sign-in-toggle' onClick={() => { setIsSignUp(p => !p); setError('') }}>
+                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+            </button>
+        </form>
     )
 }

@@ -2,37 +2,17 @@ import './Homer.css'
 import LiftRow from './LiftRow'
 import SkeletonLiftRow from './SkeletonLiftRow'
 import { useNavigate } from 'react-router-dom'
-import { useContext, useEffect, useState } from 'react'
-import { AuthContext } from '../context/context'
-import { API_URL } from '../config'
+import { useState } from 'react'
+import { useLifts } from '../utils/useLifts'
+import { displayType } from '../utils/workout'
 
 const SORT_OPTIONS = ['A–Z', 'Z–A', 'Weight ↑', 'Weight ↓', 'Most Sessions']
 
 export default function MyLifts() {
     const navigate = useNavigate();
-    const context = useContext(AuthContext);
-    const [lifts, setLifts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { lifts, loading, refresh } = useLifts();
     const [search, setSearch] = useState('');
     const [sort, setSort] = useState('A–Z');
-
-    useEffect(() => {
-        fetchLifts();
-    }, []);
-
-    const fetchLifts = (silent = false) => {
-        if (!silent) setLoading(true);
-        const token = context.token;
-        fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ query: `query { userLifts { _id name weight sets reps type pastWeights } }` })
-        })
-            .then(res => res.json())
-            .then(data => { if (data.data?.userLifts) setLifts(data.data.userLifts); })
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
-    }
 
     const filtered = lifts
         .filter(l => l.name.toLowerCase().includes(search.toLowerCase()))
@@ -56,7 +36,7 @@ export default function MyLifts() {
         <>
             <div className='Nav'>
                 <h2 onClick={() => navigate('/Home')}>Home</h2>
-                <h1>My Lifts</h1>
+                <h1>Lift Library</h1>
                 <span />
             </div>
 
@@ -87,7 +67,7 @@ export default function MyLifts() {
                     sortedTypes.map(type => (
                         <div key={type} className='section-card'>
                             <div className='section-card-header'>
-                                <h3>{type}</h3>
+                                <h3>{displayType(type)}</h3>
                             </div>
                             {grouped[type].map(lift => (
                                 <LiftRow
@@ -99,7 +79,8 @@ export default function MyLifts() {
                                     sets={lift.sets}
                                     type={lift.type}
                                     pastWeights={lift.pastWeights || []}
-                                    onMaxUpdate={() => fetchLifts(true)}
+                                    sessions={lift.sessions}
+                                    onMaxUpdate={() => refresh()}
                                 />
                             ))}
                         </div>

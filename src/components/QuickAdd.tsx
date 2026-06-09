@@ -1,6 +1,6 @@
-import { useState, useContext } from 'react'
+import { useState, useContext, useEffect, useRef } from 'react'
 import { AuthContext } from '../context/context'
-import { API_URL } from '../config'
+import { createLift } from '../utils/api'
 import './QuickAdd.css'
 
 const LIFT_TYPES = ['Chest', 'Tricept', 'Bicept', 'Shoulders', 'Back', 'Abbs', 'Legs', 'Forearms']
@@ -16,27 +16,32 @@ export default function QuickAdd({ onClose, onAdded }: Props) {
     const [weight, setWeight] = useState('')
     const [type, setType] = useState('Chest')
     const [loading, setLoading] = useState(false)
+    const [sheetPad, setSheetPad] = useState(36)
+    const sheetRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const viewport = window.visualViewport
+        if (!viewport) return
+
+        const onResize = () => {
+            const keyboardHeight = window.innerHeight - viewport.height - viewport.offsetTop
+            setSheetPad(Math.max(36, keyboardHeight + 16))
+        }
+
+        viewport.addEventListener('resize', onResize)
+        viewport.addEventListener('scroll', onResize)
+        return () => {
+            viewport.removeEventListener('resize', onResize)
+            viewport.removeEventListener('scroll', onResize)
+        }
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!name.trim()) return
         setLoading(true)
         try {
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${context.token}` },
-                body: JSON.stringify({
-                    query: `mutation {
-                        createLift(liftInput: {
-                            name: "${name.trim()}",
-                            weight: ${parseInt(weight) || 0},
-                            sets: 3,
-                            reps: 10,
-                            type: "${type}"
-                        }) { _id }
-                    }`
-                })
-            })
+            await createLift({ name: name.trim(), weight: parseInt(weight) || 0, sets: 3, reps: 10, type }, context.token)
             onAdded()
             onClose()
         } catch (err) {
@@ -48,7 +53,12 @@ export default function QuickAdd({ onClose, onAdded }: Props) {
 
     return (
         <div className='qa-overlay' onClick={onClose}>
-            <div className='qa-sheet' onClick={e => e.stopPropagation()}>
+            <div
+                ref={sheetRef}
+                className='qa-sheet'
+                style={{ paddingBottom: sheetPad }}
+                onClick={e => e.stopPropagation()}
+            >
                 <div className='qa-handle' />
                 <h3 className='qa-title'>Quick Add</h3>
                 <form className='qa-form' onSubmit={handleSubmit}>
@@ -61,14 +71,13 @@ export default function QuickAdd({ onClose, onAdded }: Props) {
                         autoFocus
                     />
                     <div className='qa-row'>
-                        <input
-                            className='qa-input qa-weight'
-                            type='number'
-                            placeholder='Weight (lbs)'
-                            min='0'
-                            value={weight}
-                            onChange={e => setWeight(e.target.value)}
-                        />
+                        <div className='qa-stepper'>
+                            <button type='button' onClick={() => setWeight(String(Math.max(0, (parseInt(weight) || 0) - 5)))}>−</button>
+                            <input className='qa-weight-val' type='number' inputMode='decimal' placeholder='0'
+                                value={weight} onChange={e => setWeight(e.target.value)} />
+                            <span className='qa-step-unit'>lbs</span>
+                            <button type='button' onClick={() => setWeight(String((parseInt(weight) || 0) + 5))}>+</button>
+                        </div>
                         <select
                             className='qa-input qa-type'
                             value={type}

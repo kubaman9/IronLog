@@ -4,7 +4,7 @@ import './Homer.css';
 import './ModifyLifts.css';
 import { useContext } from 'react';
 import { AuthContext } from '../context/context';
-import { API_URL } from '../config';
+import { createLift, editLift, clearLiftsCache } from '../utils/api';
 
 const liftTypes = [
     'Chest',
@@ -29,8 +29,8 @@ type LiftFormState = {
 const emptyLift: LiftFormState = {
     name: '',
     weight: 0,
-    sets: 0,
-    reps: 0,
+    sets: 3,
+    reps: 10,
     type: 'Chest'
 };
 
@@ -57,62 +57,25 @@ export default function ModifyLifts() {
             return;
         }
 
-        let requestBody = {
-            query: `
-                mutation {
-                    createLift(liftInput: {
-                        name: "${lift.name}",
-                        weight: ${lift.weight},
-                        sets: ${lift.sets},
-                        reps: ${lift.reps},
-                        type: "${lift.type}"
-                    }) {
-                        _id
-                        name
-                    }
-                }
-            `};
+        const input = {
+            name: lift.name.trim(),
+            weight: lift.weight,
+            sets: lift.sets,
+            reps: lift.reps,
+            type: lift.type,
+        };
 
-        let requestBodyEdit = {
-            query: `
-                mutation {
-                    editLift(liftId: "${lift._id}", liftInput: {
-                        name: "${lift.name}",
-                        weight: ${lift.weight},
-                        sets: ${lift.sets},
-                        reps: ${lift.reps},
-                        type: "${lift.type}"
-                    }) {
-                        _id
-                        name
-                    }
-                }
-            `};
+        const request = isEditMode && lift._id
+            ? editLift(lift._id, input, context.token)
+            : createLift(input, context.token);
 
-        const token = context.token;
+        request
+            .then(() => { clearLiftsCache(); navigate('/MyLifts'); })
+            .catch(err => {
+                console.error(err);
+                alert('Could not save the lift. Please try again.');
+            });
 
-        fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                query: isEditMode ? requestBodyEdit.query : requestBody.query
-            })
-        }).then(res => {
-            if (res.status !== 200 && res.status !== 201) {
-                throw new Error('Failed to authenticate.');
-            }
-            return res.json();
-        }).then(data => {
-            console.log(data);
-            navigate('/MyLifts');
-        }).catch(err => {
-            console.error(err);
-        });
-
-        console.log(`${isEditMode ? 'Editing' : 'Adding'} lift`, lift);
         setLift(emptyLift);
     };
 
@@ -139,38 +102,33 @@ export default function ModifyLifts() {
                         onChange={(event) => updateField('name', event.target.value)}
                     />
 
-                    <label htmlFor='liftWeight'>Weight</label>
-                    <input
-                        id='liftWeight'
-                        type='number'
-                        min='0'
-                        placeholder='e.g. 185'
-                        value={lift.weight || ''}
-                        onChange={(event) => updateField('weight', event.target.value)}
-                    />
+                    <label>Weight</label>
+                    <div className='ml-stepper'>
+                        <button type='button' className='ml-step-btn' onClick={() => setLift(p => ({ ...p, weight: Math.max(0, (p.weight || 0) - 5) }))}>−</button>
+                        <input type='number' inputMode='decimal' value={lift.weight || ''} placeholder='0'
+                            onChange={e => updateField('weight', e.target.value)} />
+                        <span className='ml-step-unit'>lbs</span>
+                        <button type='button' className='ml-step-btn' onClick={() => setLift(p => ({ ...p, weight: (p.weight || 0) + 5 }))}>+</button>
+                    </div>
 
                     <div className='modify-lifts-grid'>
                         <div>
-                            <label htmlFor='liftSets'>Sets</label>
-                            <input
-                                id='liftSets'
-                                type='number'
-                                min='1'
-                                placeholder='3'
-                                value={lift.sets || ''}
-                                onChange={(event) => updateField('sets', event.target.value)}
-                            />
+                            <label>Sets</label>
+                            <div className='ml-stepper'>
+                                <button type='button' className='ml-step-btn' onClick={() => setLift(p => ({ ...p, sets: Math.max(1, p.sets - 1) }))}>−</button>
+                                <input type='number' inputMode='numeric' value={lift.sets || ''} placeholder='1'
+                                    onChange={e => updateField('sets', e.target.value)} />
+                                <button type='button' className='ml-step-btn' onClick={() => setLift(p => ({ ...p, sets: Math.min(10, p.sets + 1) }))}>+</button>
+                            </div>
                         </div>
                         <div>
-                            <label htmlFor='liftReps'>Reps</label>
-                            <input
-                                id='liftReps'
-                                type='number'
-                                min='1'
-                                placeholder='10'
-                                value={lift.reps || ''}
-                                onChange={(event) => updateField('reps', event.target.value)}
-                            />
+                            <label>Reps</label>
+                            <div className='ml-stepper'>
+                                <button type='button' className='ml-step-btn' onClick={() => setLift(p => ({ ...p, reps: Math.max(1, p.reps - 1) }))}>−</button>
+                                <input type='number' inputMode='numeric' value={lift.reps || ''} placeholder='1'
+                                    onChange={e => updateField('reps', e.target.value)} />
+                                <button type='button' className='ml-step-btn' onClick={() => setLift(p => ({ ...p, reps: Math.min(50, p.reps + 1) }))}>+</button>
+                            </div>
                         </div>
                     </div>
 
@@ -188,7 +146,7 @@ export default function ModifyLifts() {
                     </select>
 
                     <button className='confirm-button' type='submit'>
-                        Confirm
+                        {isEditMode ? 'Save Changes' : 'Add Lift'}
                     </button>
                 </form>
             </div>

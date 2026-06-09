@@ -1,15 +1,17 @@
 #box {
   max-width: 380px;
   margin: 80px auto 0;
-  animation: page-in 0.3s ease both;
+  animation: page-in 0.35s cubic-bezier(0.34,1.1,0.64,1) both;
   padding: 40px 36px;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--code-bg);
-  box-shadow: var(--shadow);
+  border-radius: 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow), 0 0 0 1px var(--glass-border);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .sign-in-brand {
@@ -17,25 +19,28 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .sign-in-icon {
-  font-size: 36px;
+  font-size: 40px;
   line-height: 1;
 }
 
 .sign-in-brand h1 {
   margin: 0;
-  font-size: 26px;
-  letter-spacing: -0.5px;
+  font-size: 28px;
+  letter-spacing: -0.8px;
   color: var(--text-h);
+  font-family: var(--heading);
+  font-weight: 700;
 }
 
 .sign-in-tagline {
   font-size: 13px;
   color: var(--text);
   margin: 0;
+  opacity: 0.8;
 }
 
 .input-group {
@@ -47,24 +52,26 @@
 
 .input-group label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
-  letter-spacing: 0.6px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
+  font-family: var(--heading);
 }
 
 #box input {
   width: 100%;
-  padding: 10px 13px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
+  border-radius: 10px;
+  background: var(--bg-secondary);
   color: var(--text-h);
   font-size: 15px;
   font-family: var(--sans);
   transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
   outline: none;
+  -webkit-appearance: none;
 }
 
 #box input:focus {
@@ -74,29 +81,54 @@
 
 #box input::placeholder {
   color: var(--text);
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 #box button {
   width: 100%;
-  padding: 11px;
+  padding: 13px;
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  font-family: var(--sans);
-  letter-spacing: 0.3px;
+  font-family: var(--heading);
+  letter-spacing: 0.5px;
   margin-top: 6px;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 4px 20px var(--accent-glow);
 }
 
 #box button:hover {
-  opacity: 0.85;
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px var(--accent-glow);
 }
 
-#box button:active {
-  transform: scale(0.98);
+#box button:active { transform: scale(0.98); }
+
+.sign-in-error {
+  font-size: 13px;
+  color: var(--red);
+  text-align: center;
+  margin: -4px 0 0;
+  font-weight: 500;
 }
+
+.sign-in-toggle {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  margin-top: -4px !important;
+  border: none !important;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 0 !important;
+}
+
+.sign-in-toggle:hover { color: var(--accent) !important; opacity: 1 !important; transform: none !important; }
