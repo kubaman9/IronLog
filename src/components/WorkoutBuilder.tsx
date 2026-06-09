@@ -179,7 +179,8 @@ export default function WorkoutBuilder() {
                     </div>
                 )}
 
-                {groups.length > 0 && (
+                {/* Planned: full drag-and-drop plan builder */}
+                {mode === 'planned' && groups.length > 0 && (
                     <div className='wb-section'>
                         <div className='wb-section-title'>
                             Workout Plan
@@ -203,7 +204,7 @@ export default function WorkoutBuilder() {
                                     <div className='wb-plan-info'>
                                         <span className='wb-plan-name'>{ex.name}</span>
                                         <span className='wb-plan-meta'>
-                                            {ex.type} · {ex.sets}×{ex.reps}
+                                            {displayType(ex.type)} · {ex.sets}×{ex.reps}
                                             {ex.weight > 0 ? ` · ${ex.weight} lbs` : ' · Bodyweight'}
                                             {ex.isPlaceholder && <span className='wb-tag'>Template</span>}
                                         </span>
@@ -211,7 +212,6 @@ export default function WorkoutBuilder() {
                                     <button className='wb-remove' onClick={() => removeEx(ex.id)}>×</button>
                                 </div>
                             ))}
-                            {/* Drop zone at end */}
                             <div className={`wb-drop-zone ${dragOverIdx === plan.length ? 'active' : ''}`}
                                 onDragOver={e => { e.preventDefault(); setDragOverIdx(plan.length) }}
                                 onDrop={onPlanDrop}
@@ -219,13 +219,39 @@ export default function WorkoutBuilder() {
                             />
                         </div>
                         <div className='wb-add-row'>
-                            <button className='wb-add-btn' onClick={() => setShowSplit(true)}>
-                                + Add from My Lifts
-                            </button>
-                            <button className='wb-add-btn accent' onClick={() => setShowCustom(true)}>
-                                + Custom
-                            </button>
+                            <button className='wb-add-btn' onClick={() => setShowSplit(true)}>+ Add from My Lifts</button>
+                            <button className='wb-add-btn accent' onClick={() => setShowCustom(true)}>+ Custom</button>
                         </div>
+                    </div>
+                )}
+
+                {/* On the Go: quick-tap suggestions from library */}
+                {mode === 'on-the-go' && groups.length > 0 && (
+                    <div className='wb-section'>
+                        <div className='wb-section-title'>
+                            Quick Suggestions
+                            <span className='wb-hint'>tap to pre-load · add more mid-session</span>
+                        </div>
+                        <div className='wb-otg-suggestions'>
+                            {typeLifts.length === 0 ? (
+                                <p className='wb-empty' style={{ margin: 0, fontSize: 12 }}>No saved lifts for these types yet.</p>
+                            ) : typeLifts.map(l => {
+                                const selected = plan.some(e => e.liftId === l._id)
+                                return (
+                                    <button key={l._id}
+                                        className={`wb-otg-sug-chip ${selected ? 'selected' : ''}`}
+                                        onClick={() => selected ? removeEx(plan.find(e => e.liftId === l._id)!.id) : addFromLibrary(l)}
+                                    >
+                                        {selected && <span className='wb-otg-check'>✓</span>}
+                                        <span className='wb-otg-sug-name'>{l.name}</span>
+                                        <span className='wb-otg-sug-meta'>{l.weight > 0 ? `${l.weight}lb` : 'BW'}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        {plan.length > 0 && (
+                            <p className='wb-otg-sel-count'>{plan.length} pre-loaded · add more mid-session</p>
+                        )}
                     </div>
                 )}
 
