@@ -44,6 +44,16 @@ export default function WorkoutSession() {
     const [selectedGenIds, setSelectedGenIds] = useState<Set<string>>(new Set())
     const [sessionGroups, setSessionGroups] = useState<string[]>([])
     const [addLiftFilter, setAddLiftFilter] = useState<string>('')
+    const [prCelebrate, setPrCelebrate] = useState(false)
+    const swipeTouchY = useRef(0)
+
+    const PR_EMOJIS = ['🏆', '💪', '🔥', '⚡', '🎯', '🚀']
+    const prEmojiRef = useRef(PR_EMOJIS[0])
+
+    const useSwipe = (onClose: () => void) => ({
+        onTouchStart: (e: React.TouchEvent) => { swipeTouchY.current = e.touches[0].clientY },
+        onTouchEnd: (e: React.TouchEvent) => { if (e.changedTouches[0].clientY - swipeTouchY.current > 70) onClose() }
+    })
     const [qaName, setQaName] = useState('')
     const [qaWeight, setQaWeight] = useState('')
     const [qaType, setQaType] = useState('Chest')
@@ -162,6 +172,11 @@ export default function WorkoutSession() {
                 : null
             if (flash) {
                 setCardFlash(prev => ({ ...prev, [exId]: flash }))
+                if (flash === 'pr') {
+                    prEmojiRef.current = PR_EMOJIS[Math.floor(Math.random() * PR_EMOJIS.length)]
+                    setPrCelebrate(true)
+                    setTimeout(() => setPrCelebrate(false), 2000)
+                }
                 setTimeout(() => {
                     setCollapsedIds(prev => new Set([...prev, exId]))
                     setCardFlash(prev => { const n = { ...prev }; delete n[exId]; return n })
@@ -322,6 +337,13 @@ export default function WorkoutSession() {
 
     return (
         <>
+            {/* PR Celebration overlay */}
+            {prCelebrate && (
+                <div className='ws-pr-overlay' aria-hidden>
+                    <span className='ws-pr-emoji'>{prEmojiRef.current}</span>
+                </div>
+            )}
+
             <div className='ws-header'>
                 <div className='ws-header-top'>
                     <button className='ws-quit-btn' onClick={quit}>✕ Quit</button>
@@ -501,9 +523,12 @@ export default function WorkoutSession() {
             {/* Add Lift sheet (On the Go) */}
             {showAddLift && (
                 <div className='qa-overlay' onClick={() => setShowAddLift(false)}>
-                    <div className='qa-sheet' onClick={e => e.stopPropagation()}>
+                    <div className='qa-sheet' onClick={e => e.stopPropagation()} {...useSwipe(() => setShowAddLift(false))}>
                         <div className='qa-handle' />
-                        <h3 className='qa-title'>Add Lift</h3>
+                        <div className='qa-sheet-header'>
+                            <h3 className='qa-title'>Add Lift</h3>
+                            <button className='qa-close-btn' onClick={() => setShowAddLift(false)}>✕</button>
+                        </div>
 
                         {/* Type filter chips */}
                         {sessionGroups.length > 0 && (
@@ -563,9 +588,12 @@ export default function WorkoutSession() {
             {/* Generate from Lifts sheet (On the Go) */}
             {showGenerateLifts && (
                 <div className='qa-overlay' onClick={() => setShowGenerateLifts(false)}>
-                    <div className='qa-sheet' onClick={e => e.stopPropagation()}>
+                    <div className='qa-sheet' onClick={e => e.stopPropagation()} {...useSwipe(() => setShowGenerateLifts(false))}>
                         <div className='qa-handle' />
-                        <h3 className='qa-title'>Generate from Lifts</h3>
+                        <div className='qa-sheet-header'>
+                            <h3 className='qa-title'>Generate from Lifts</h3>
+                            <button className='qa-close-btn' onClick={() => setShowGenerateLifts(false)}>✕</button>
+                        </div>
                         <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 16 }}>
                             {savedLifts.length === 0 && (
                                 <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0 }}>No saved lifts yet. Add lifts in My Lifts first.</p>
@@ -593,9 +621,12 @@ export default function WorkoutSession() {
             {/* Add Exercise Sheet */}
             {showAddEx && (
                 <div className='qa-overlay' onClick={() => setShowAddEx(false)}>
-                    <div className='qa-sheet' onClick={e => e.stopPropagation()}>
+                    <div className='qa-sheet' onClick={e => e.stopPropagation()} {...useSwipe(() => setShowAddEx(false))}>
                         <div className='qa-handle' />
-                        <h3 className='qa-title'>Add Exercise</h3>
+                        <div className='qa-sheet-header'>
+                            <h3 className='qa-title'>Add Exercise</h3>
+                            <button className='qa-close-btn' onClick={() => setShowAddEx(false)}>✕</button>
+                        </div>
 
                         {/* From My Library — always shown first */}
                         {savedLifts.filter(l => !exercises.find(e => e.liftId === l._id)).length > 0 && (
