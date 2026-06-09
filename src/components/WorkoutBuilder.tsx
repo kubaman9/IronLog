@@ -48,9 +48,13 @@ export default function WorkoutBuilder() {
     const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
 
     useEffect(() => {
+        if (mode !== 'planned') return
         if (groups.length > 0) setPlan(buildPlan(groups, duration, setsPerEx, userLifts))
         else setPlan([])
-    }, [groups, duration, setsPerEx, userLifts])
+    }, [mode, groups, duration, setsPerEx, userLifts])
+
+    // Clear plan when switching modes so OTG starts empty
+    useEffect(() => { setPlan([]) }, [mode])
 
     const toggleGroup = (g: string) =>
         setGroups(p => p.includes(g) ? p.filter(x => x !== g) : (mode === 'on-the-go' || p.length < 3) ? [...p, g] : p)
